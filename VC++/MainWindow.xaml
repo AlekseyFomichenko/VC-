@@ -1,0 +1,26 @@
+﻿<Window x:Class="VC__.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="VC++ Manager" Height="480" Width="650" ResizeMode="NoResize">
+	<Grid Margin="10">
+		<StackPanel>
+			<TextBlock Text="Visual C++ Redistributable Manager"
+                       FontSize="22" FontWeight="Bold"
+                       Margin="0,0,0,15" HorizontalAlignment="Center"/>
+
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+				<Button x:Name="BtnClean" Content="Очистить" Width="150" Height="40" Margin="5"/>
+				<Button x:Name="BtnInstall" Content="Установить" Width="150" Height="40" Margin="5"/>
+				<Button x:Name="BtnUpdate" Content="Обновить" Width="150" Height="40" Margin="5"/>
+			</StackPanel>
+
+			<TextBox x:Name="LogBox" Height="330"
+                     VerticalScrollBarVisibility="Auto"
+                     TextWrapping="Wrap"
+                     IsReadOnly="True"
+                     FontFamily="Consolas"
+                     Background="#111"
+                     Foreground="#0f0"/>
+		</StackPanel>
+	</Grid>
+</Window>
