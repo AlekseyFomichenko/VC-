@@ -1,0 +1,33 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Publish (win-x64, framework-dependent)
+        run: dotnet publish VC++/VC++.csproj -c Release -r win-x64 --self-contained false -o ./artifacts/win-x64
+
+      - name: Archive
+        run: powershell -Command "Compress-Archive -Path artifacts/win-x64/* -DestinationPath artifacts/v${{ github.ref_name }}-win-x64.zip"
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          files: artifacts/v${{ github.ref_name }}-win-x64.zip
