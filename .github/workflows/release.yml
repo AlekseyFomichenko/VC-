@@ -19,11 +19,14 @@ jobs:
       - name: Restore
         run: dotnet restore
 
+      - name: Build
+        run: dotnet build -c Release
+
       - name: Publish (win-x64, framework-dependent)
-        run: dotnet publish VC++/VC++.csproj -c Release -r win-x64 --self-contained false -o ./artifacts/win-x64
+        run: dotnet publish VC++/VC++.csproj -c Release -r win-x64 --self-contained false -o ./publish/win-x64
 
       - name: Archive
-        run: powershell -Command "Compress-Archive -Path artifacts/win-x64/* -DestinationPath artifacts/v${{ github.ref_name }}-win-x64.zip"
+        run: powershell -Command "Compress-Archive -Path publish/win-x64/* -DestinationPath artifacts/v${{ github.ref_name }}-win-x64.zip"
 
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
