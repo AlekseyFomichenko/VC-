@@ -22,9 +22,16 @@ jobs:
       - name: Restore
         run: dotnet restore
 
-      - name: Publish (win-x64, framework-dependent)
-        run: dotnet publish VC++/VC++.csproj -c Release -r win-x64 --self-contained false -o ./publish/win-x64
-        #fjdgnfhd 
+      - name: Publish (win-x64, self-contained)
+        run: >
+          dotnet publish VC++/VC++.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          /p:PublishSingleFile=true
+          /p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish/win-x64
+
       - name: Ensure artifacts folder
         run: pwsh -Command "New-Item -ItemType Directory -Path artifacts -Force | Out-Null"
 
