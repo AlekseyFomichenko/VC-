@@ -2,6 +2,8 @@
 
 Небольшое WPF-приложение для автоматизированной установки, обновления и очистки пакетов Microsoft Visual C++ Redistributable через Windows Package Manager (`winget`).
 
+![GUI Screenshot](VC++/docs/gui.png)
+
 ## Особенности
 - Установка комплекта VC++ (2005–2022) через `winget`.
 - Обновление установленных VC++ через `winget`.
@@ -19,7 +21,9 @@
    - `git clone https://github.com/AlekseyFomichenko/VC-`
 2. Открыть решение в Visual Studio или из папки проекта:
    - `dotnet build`
-   - `dotnet run --project VC++/VC++.csproj` (в Visual Studio просто запустить проект)
+   - `dotnet publish VC++/VC++.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true  /p:IncludeNativeLibrariesForSelfExtract=true`
+   - Результат будет в `VC++/bin/Release/net8.0-windows/win-x64/publish/`.
+   - Запустить `VC++.exe` от имени администратора.
 
 > В проекте включён `Nullable` (C# 12 / .NET 8). Код использует `RunWingetAsync(...)` для взаимодействия с `winget`.
 

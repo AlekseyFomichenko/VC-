@@ -1,12 +1,7 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 using System.Windows;
-using System.Linq;
 using System.IO;
-// using System.Management; // removed: WMI not used after refactor
 
 namespace VC__
 {
@@ -24,7 +19,6 @@ namespace VC__
         private static bool IsNoUpgrade(string output)
         {
             if (string.IsNullOrWhiteSpace(output)) return false;
-            // common phrases indicating no upgrade available
             var phrases = new[]
             {
                 "No available upgrade found",
@@ -38,21 +32,17 @@ namespace VC__
 
         private void Log(string text)
         {
-            // Ensure logging happens on UI thread
             if (!Dispatcher.CheckAccess())
             {
                 Dispatcher.Invoke(() => Log(text));
                 return;
             }
 
-            // Append new line
             LogBox.AppendText(text + Environment.NewLine);
 
-            // Cap total log size to keep memory low (храним только последние ~150 KB)
             const int maxChars = 150_000;
             if (LogBox.Text.Length > maxChars)
             {
-                // Удаляем старую часть, оставляя последние maxChars/2 символов
                 int keep = maxChars / 2;
                 var trimmed = LogBox.Text.Substring(LogBox.Text.Length - keep, keep);
                 LogBox.Text = trimmed;
@@ -72,7 +62,6 @@ namespace VC__
             {
                 Log($"Проверка: {pkg.Name}");
 
-                // Check if installed using `winget list --id <id>` (suppress logging)
                 string listResult = await RunWingetAsync($"list --id {pkg.Id}", logOutput: false);
 
                 if (string.IsNullOrWhiteSpace(listResult) ||
@@ -86,23 +75,18 @@ namespace VC__
                 Log($"Удаление: {pkg.Name}");
                 try
                 {
-                    // Try uninstall in user scope first to avoid elevation (no admin prompt)
                     string result = await RunWingetAsync($"uninstall --id {pkg.Id} --silent --disable-interactivity --accept-source-agreements --all-versions --scope user", logOutput: false);
                     if (result.Contains("Successfully uninstalled", StringComparison.OrdinalIgnoreCase))
                     {
                         Log("  ✓ Удалено (user scope)");
                         continue;
                     }
-
-                    // If multiple versions or other issues, try uninstall without user scope but with force/all-versions (may still need elevation)
                     result = await RunWingetAsync($"uninstall --id {pkg.Id} --silent --disable-interactivity --accept-source-agreements --all-versions --force", logOutput: false);
                     if (result.Contains("Successfully uninstalled", StringComparison.OrdinalIgnoreCase))
                     {
                         Log("  ✓ Удалено (force)");
                         continue;
                     }
-
-                    // If we reach here, uninstall failed (possibly exit code 1603). Log brief reason and do not attempt interactive elevation.
                     var brief = SummarizeWingetResult(result);
                     Log("  ⚠ Не удалось удалить: " + brief);
                 }
@@ -125,7 +109,6 @@ namespace VC__
             {
                 Log($"Установка: {pkg.Name}");
 
-                // Check if already installed using `winget list --id <id>` (suppress logging)
                 string listResult = await RunWingetAsync($"list --id {pkg.Id}", logOutput: false);
                 if (!string.IsNullOrWhiteSpace(listResult) && !listResult.Contains("No installed package found matching input criteria") && !listResult.Contains("No installed package found"))
                 {
@@ -135,23 +118,18 @@ namespace VC__
 
                 try
                 {
-                    // Try installing in user scope to avoid admin prompt
                     string result = await RunWingetAsync($"install --id {pkg.Id} --silent --disable-interactivity --accept-package-agreements --accept-source-agreements --scope user", logOutput: false);
                     if (result.Contains("Successfully installed", StringComparison.OrdinalIgnoreCase))
                     {
                         Log("  ✓ Готово (user scope)");
                         continue;
                     }
-
-                    // Detect messages that indicate installer will prompt for elevation
                     if (result.IndexOf("request to run as administrator", StringComparison.OrdinalIgnoreCase) >= 0 ||
                         result.IndexOf("will request to run as administrator", StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         Log("  ⚠ Требуется администратор, пропущено (чтобы избежать запроса UAC)");
                         continue;
                     }
-
-                    // Fallback: try machine install but do not force interactive elevation — attempt and check
                     result = await RunWingetAsync($"install --id {pkg.Id} --silent --disable-interactivity --accept-package-agreements --accept-source-agreements", logOutput: false);
                     if (result.Contains("Successfully installed", StringComparison.OrdinalIgnoreCase))
                     {
@@ -187,8 +165,6 @@ namespace VC__
                     Log("  ✓ Обновлений нет");
                     continue;
                 }
-
-                // If user-scope upgrade didn't perform and indicates admin required, skip to avoid prompt
                 if (result.IndexOf("request to run as administrator", StringComparison.OrdinalIgnoreCase) >= 0 ||
                     result.IndexOf("will request to run as administrator", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
@@ -275,20 +251,17 @@ namespace VC__
             if (string.IsNullOrWhiteSpace(output))
                 return string.Empty;
 
-            // Remove spinner/animation characters and long repeated whitespace lines
             var lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(l => l.Trim())
                 .Where(l => !string.IsNullOrEmpty(l))
                 .Where(l => !IsSpinnerLine(l))
                 .ToArray();
 
-            // Return only first few meaningful lines to keep logs short
             return string.Join("\n", lines.Take(6));
         }
 
         private static bool IsSpinnerLine(string line)
         {
-            // Lines that consist mostly of progress characters can be ignored
             if (line.Length < 2) return string.Empty.Equals(line);
             var spinnerChars = new[] { '-', '\\', '/', '|', '█', '▒', '░' };
             var significant = line.Count(c => !char.IsWhiteSpace(c) && !spinnerChars.Contains(c));
