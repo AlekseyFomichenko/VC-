@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*.*.*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -33,4 +36,4 @@ jobs:
         with:
           tag: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
-          files: artifacts/v${{ github.ref_name }}-win-x64.zip
+          artifacts: artifacts/${{ github.ref_name }}-win-x64.zip
